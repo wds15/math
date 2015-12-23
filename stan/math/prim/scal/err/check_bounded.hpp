@@ -10,6 +10,21 @@
 namespace stan {
   namespace math {
 
+    template <typename T_y, typename T_low, typename T_high>
+    bool is_bounded(const T_y& y, const T_low& low, const T_high& high) {
+      using stan::max_size;
+
+      VectorView<const T_y> y_vec(y);
+      VectorView<const T_low> low_vec(low);
+      VectorView<const T_high> high_vec(high);
+      for (size_t n = 0; n < max_size(y, low, high); n++) {
+        if (!(low_vec[n] <= y_vec[n] && y_vec[n] <= high_vec[n])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     namespace detail {
 
       // implemented using structs because there is no partial specialization
