@@ -1,5 +1,5 @@
-#ifndef STAN_MATH_REV_ARR_FUNCTOR_COUPLED_ODE_SYSTEM_HPP
-#define STAN_MATH_REV_ARR_FUNCTOR_COUPLED_ODE_SYSTEM_HPP
+#ifndef STAN_MATH_REV_MAT_FUNCTOR_COUPLED_ODE_SYSTEM_HPP
+#define STAN_MATH_REV_MAT_FUNCTOR_COUPLED_ODE_SYSTEM_HPP
 
 #include <stan/math/prim/arr/meta/get.hpp>
 #include <stan/math/prim/arr/meta/length.hpp>
@@ -7,6 +7,7 @@
 #include <stan/math/prim/arr/functor/coupled_ode_system.hpp>
 #include <stan/math/rev/scal/fun/value_of_rec.hpp>
 #include <stan/math/rev/scal/fun/value_of.hpp>
+#include <stan/math/rev/mat/functor/ode_system.hpp>
 #include <stan/math/rev/core.hpp>
 #include <ostream>
 #include <stdexcept>
@@ -19,23 +20,6 @@ namespace stan {
     // It is in namespace stan::math so that the partial template
     // specializations are treated as such.
 
-    /**
-     * Increment the state derived from the coupled system in the with
-     * the original initial state.  This is necessary because the
-     * coupled system subtracts out the initial state in its
-     * representation when the initial state is unknown.
-     *
-     * @param[in] y0 original initial values to add back into the
-     * coupled system.
-     * @param[in, out] y state of the coupled system on input,
-     * incremented with initial values on output.
-     */
-    inline void add_initial_values(const std::vector<var>& y0,
-                                   std::vector<std::vector<var> >& y) {
-      for (size_t n = 0; n < y.size(); n++)
-        for (size_t m = 0; m < y0.size(); m++)
-          y[n][m] += y0[m];
-    }
 
     /**
      * The coupled ODE system for known initial values and unknown
@@ -59,18 +43,16 @@ namespace stan {
      * @tparam F type of functor for the base ode system.
      */
     template <typename F>
-    struct coupled_ode_system <F, double, var> {
-      const F& f_;
+    class coupled_ode_system <F, double, var> {
       const std::vector<double>& y0_dbl_;
       const std::vector<var>& theta_;
-      std::vector<double> theta_dbl_;
-      const std::vector<double>& x_;
-      const std::vector<int>& x_int_;
       const size_t N_;
       const size_t M_;
+      const size_t S_;
       const size_t size_;
-      std::ostream* msgs_;
+      const ode_system<F> ode_system_;
 
+    public:
       /**
        * Construct a coupled ODE system with the specified base
        * ODE system, base initial state, parameters, data, and a
@@ -89,19 +71,13 @@ namespace stan {
                          const std::vector<double>& x,
                          const std::vector<int>& x_int,
                          std::ostream* msgs)
-        : f_(f),
-          y0_dbl_(y0),
+        : y0_dbl_(y0),
           theta_(theta),
-          theta_dbl_(theta.size(), 0.0),
-          x_(x),
-          x_int_(x_int),
           N_(y0.size()),
           M_(theta.size()),
+          S_(M_),
           size_(N_ + N_ * M_),
-          msgs_(msgs) {
-        for (size_t m = 0; m < M_; m++)
-          theta_dbl_[m] = value_of(theta[m]);
-      }
+          ode_system_(f, value_of(theta), x, x_int, msgs) {}
 
       /**
        * Assign the derivative vector with the system derivatives at
@@ -122,54 +98,22 @@ namespace stan {
        */
       void operator()(const std::vector<double>& z,
                       std::vector<double>& dz_dt,
-                      double t) {
-        using std::vector;
+                      double t) const {
+        using Eigen::Map;
+        using Eigen::MatrixXd;
+        using Eigen::VectorXd;
 
-        vector<double> y(z.begin(), z.begin() + N_);
-        dz_dt = f_(t, y, theta_dbl_, x_, x_int_, msgs_);
-        check_equal("coupled_ode_system",
-                    "dz_dt", dz_dt.size(), N_);
+        const std::vector<double> y_base(z.begin(), z.begin() + N_);
+        Map<VectorXd> dz_dt_eig(&dz_dt[0], N_);
+        Map<MatrixXd> dZ_dt_sens(&dz_dt[0] + N_, N_, S_);
+        Map<const MatrixXd> Z_sens(&z[0] + N_, N_, S_);
 
-        vector<double> coupled_sys(N_ * M_);
-        vector<double> grad(N_ + M_);
+        MatrixXd Jy(N_, N_);
 
-        try {
-          start_nested();
+        ode_system_.jacobian(t, y_base, dz_dt_eig, Jy, dZ_dt_sens);
 
-          vector<var> z_vars;
-          z_vars.reserve(N_ + M_);
-
-          vector<var> y_vars(y.begin(), y.end());
-          z_vars.insert(z_vars.end(), y_vars.begin(), y_vars.end());
-
-          vector<var> theta_vars(theta_dbl_.begin(), theta_dbl_.end());
-          z_vars.insert(z_vars.end(), theta_vars.begin(), theta_vars.end());
-
-          vector<var> dy_dt_vars = f_(t, y_vars, theta_vars, x_, x_int_, msgs_);
-
-          for (size_t i = 0; i < N_; i++) {
-            set_zero_all_adjoints_nested();
-            dy_dt_vars[i].grad(z_vars, grad);
-
-            for (size_t j = 0; j < M_; j++) {
-              // orders derivatives by equation (i.e. if there are 2 eqns
-              // (y1, y2) and 2 parameters (a, b), dy_dt will be ordered as:
-              // dy1_dt, dy2_dt, dy1_da, dy2_da, dy1_db, dy2_db
-              double temp_deriv = grad[N_ + j];
-              for (size_t k = 0; k < N_; k++)
-                temp_deriv += z[N_ + N_ * j + k] * grad[k];
-
-              coupled_sys[i + j * N_] = temp_deriv;
-            }
-          }
-        } catch (const std::exception& e) {
-          recover_memory_nested();
-          throw;
-        }
-        recover_memory_nested();
-
-        dz_dt.insert(dz_dt.end(), coupled_sys.begin(), coupled_sys.end());
-      }
+        dZ_dt_sens += Jy * Z_sens;
+       }
 
       /**
        * Returns the size of the coupled system.
@@ -193,7 +137,7 @@ namespace stan {
        *
        * @return the initial condition of the coupled system.
        */
-      std::vector<double> initial_state() {
+      std::vector<double> initial_state() const {
         std::vector<double> state(size_, 0.0);
         for (size_t n = 0; n < N_; n++)
           state[n] = y0_dbl_[n];
@@ -207,7 +151,7 @@ namespace stan {
        * @param y coupled states after solving the ode
        */
       std::vector<std::vector<var> >
-      decouple_states(const std::vector<std::vector<double> >& y) {
+      decouple_states(const std::vector<std::vector<double> >& y) const {
         std::vector<var> temp_vars(N_);
         std::vector<double> temp_gradients(M_);
         std::vector<std::vector<var> > y_return(y.size());
@@ -227,7 +171,7 @@ namespace stan {
         }
         return y_return;
       }
-    };
+   };
 
     /**
      * The coupled ODE system for unknown initial values and known
@@ -256,18 +200,16 @@ namespace stan {
      * @tparam F type of base ODE system functor
      */
     template <typename F>
-    struct coupled_ode_system <F, var, double> {
-      const F& f_;
-      const std::vector<var>& y0_;
+    class coupled_ode_system <F, var, double> {
       std::vector<double> y0_dbl_;
-      const std::vector<double>& theta_dbl_;
-      const std::vector<double>& x_;
-      const std::vector<int>& x_int_;
-      std::ostream* msgs_;
+      const std::vector<var>& y0_;
       const size_t N_;
       const size_t M_;
+      const size_t S_;
       const size_t size_;
+      const ode_system<F> ode_system_;
 
+    public:
       /**
        * Construct a coupled ODE system for an unknown initial state
        * and known parameters givne the specified base system functor,
@@ -287,19 +229,13 @@ namespace stan {
                          const std::vector<double>& x,
                          const std::vector<int>& x_int,
                          std::ostream* msgs)
-        : f_(f),
+        : y0_dbl_(value_of(y0)),
           y0_(y0),
-          y0_dbl_(y0.size(), 0.0),
-          theta_dbl_(theta),
-          x_(x),
-          x_int_(x_int),
-          msgs_(msgs),
           N_(y0.size()),
           M_(theta.size()),
-          size_(N_ + N_ * N_) {
-        for (size_t n = 0; n < N_; n++)
-          y0_dbl_[n] = value_of(y0_[n]);
-      }
+          S_(N_),
+          size_(N_ + N_ * N_),
+          ode_system_(f, theta, x, x_int, msgs) { }
 
       /**
        * Calculates the derivative of the coupled ode system
@@ -319,53 +255,21 @@ namespace stan {
        */
       void operator()(const std::vector<double>& z,
                       std::vector<double>& dz_dt,
-                      double t) {
-        using std::vector;
+                      double t) const {
+        using Eigen::Map;
+        using Eigen::MatrixXd;
+        using Eigen::VectorXd;
 
-        std::vector<double> y(z.begin(), z.begin() + N_);
-        for (size_t n = 0; n < N_; n++)
-          y[n] += y0_dbl_[n];
+        const std::vector<double> y_base(z.begin(), z.begin() + N_);
+        Map<VectorXd> dz_dt_eig(&dz_dt[0], N_);
+        Map<MatrixXd> dZ_dt_sens(&dz_dt[0] + N_, N_, S_);
+        Map<const MatrixXd> Z_sens(&z[0] + N_, N_, S_);
 
-        dz_dt = f_(t, y, theta_dbl_, x_, x_int_, msgs_);
-        check_equal("coupled_ode_system",
-                    "dz_dt", dz_dt.size(), N_);
+        MatrixXd Jy(N_, N_);
 
-        std::vector<double> coupled_sys(N_ * N_);
-        std::vector<double> grad(N_);
+        ode_system_.jacobian(t, y_base, dz_dt_eig, Jy);
 
-        try {
-          start_nested();
-
-          vector<var> z_vars;
-          z_vars.reserve(N_);
-
-          vector<var> y_vars(y.begin(), y.end());
-          z_vars.insert(z_vars.end(), y_vars.begin(), y_vars.end());
-
-          vector<var> dy_dt_vars = f_(t, y_vars, theta_dbl_, x_, x_int_, msgs_);
-
-          for (size_t i = 0; i < N_; i++) {
-            set_zero_all_adjoints_nested();
-            dy_dt_vars[i].grad(z_vars, grad);
-
-            for (size_t j = 0; j < N_; j++) {
-              // orders derivatives by equation (i.e. if there are 2 eqns
-              // (y1, y2) and 2 parameters (a, b), dy_dt will be ordered as:
-              // dy1_dt, dy2_dt, dy1_da, dy2_da, dy1_db, dy2_db
-              double temp_deriv = grad[j];
-              for (size_t k = 0; k < N_; k++)
-                temp_deriv += z[N_ + N_ * j + k] * grad[k];
-
-              coupled_sys[i + j * N_] = temp_deriv;
-            }
-          }
-        } catch (const std::exception& e) {
-          recover_memory_nested();
-          throw;
-        }
-        recover_memory_nested();
-
-        dz_dt.insert(dz_dt.end(), coupled_sys.begin(), coupled_sys.end());
+        dZ_dt_sens = Jy * Z_sens;
       }
 
       /**
@@ -380,22 +284,21 @@ namespace stan {
       /**
        * Returns the initial state of the coupled system.
        *
-       * <p>Because the starting state is unknown, the coupled system
-       * incorporates the initial conditions as parameters.  The
-       * initial conditions for the coupled part of the system are set
-       * to zero along with the rest of the initial state, because the
-       * value of the initial state has been moved into the
-       * parameters.
+       * <p>For unkown initial values, the sensitivities are
+       * initialized to the identity matrix at t=0.
        *
        * @return the initial condition of the coupled system.
-       *   This is a vector of length size() where all elements
-       *   are 0.
        */
-      std::vector<double> initial_state() {
-        return std::vector<double>(size_, 0.0);
+      std::vector<double> initial_state() const {
+        std::vector<double> initial(size_, 0.0);
+        for (size_t i = 0; i < N_; i++)
+          initial[i] = y0_dbl_[i];
+        for (size_t i = 0; i < N_; i++)
+          initial[N_ + i * N_ + i] = 1.0;
+        return initial;
       }
 
-      /**
+       /**
        * Return the solutions to the basic ODE system, including
        * appropriate autodiff partial derivatives, given the specified
        * coupled system solution.
@@ -403,7 +306,7 @@ namespace stan {
        * @param y the vector of the coupled states after solving the ode
        */
       std::vector<std::vector<var> >
-      decouple_states(const std::vector<std::vector<double> >& y) {
+      decouple_states(const std::vector<std::vector<double> >& y) const {
         using std::vector;
 
         vector<var> temp_vars(N_);
@@ -423,11 +326,9 @@ namespace stan {
           y_return[i] = temp_vars;
         }
 
-        add_initial_values(y0_, y_return);
-
         return y_return;
       }
-    };
+   };
 
     /**
      * The coupled ode system for unknown intial values and unknown
@@ -465,19 +366,17 @@ namespace stan {
      * @tparam F the functor for the base ode system
      */
     template <typename F>
-    struct coupled_ode_system <F, var, stan::math::var> {
-      const F& f_;
-      const std::vector<var>& y0_;
+    class coupled_ode_system <F, var, var> {
       std::vector<double> y0_dbl_;
-      const std::vector<var>& theta_;
-      std::vector<double> theta_dbl_;
-      const std::vector<double>& x_;
-      const std::vector<int>& x_int_;
+      std::vector<var> y0_;
+      std::vector<var> theta_;
       const size_t N_;
       const size_t M_;
+      const size_t S_;
       const size_t size_;
-      std::ostream* msgs_;
+      const ode_system<F> ode_system_;
 
+    public:
       /**
        * Construct a coupled ODE system with unknown initial value and
        * known parameters, given the base ODE system functor, the
@@ -497,23 +396,14 @@ namespace stan {
                          const std::vector<double>& x,
                          const std::vector<int>& x_int,
                          std::ostream* msgs)
-        : f_(f),
+        : y0_dbl_(value_of(y0)),
           y0_(y0),
-          y0_dbl_(y0.size(), 0.0),
           theta_(theta),
-          theta_dbl_(theta.size(), 0.0),
-          x_(x),
-          x_int_(x_int),
           N_(y0.size()),
           M_(theta.size()),
+          S_(N_ + M_),
           size_(N_ + N_ * (N_ + M_)),
-          msgs_(msgs) {
-        for (size_t n = 0; n < N_; n++)
-          y0_dbl_[n] = value_of(y0[n]);
-
-        for (size_t m = 0; m < M_; m++)
-          theta_dbl_[m] = value_of(theta[m]);
-      }
+          ode_system_(f, value_of(theta), x, x_int, msgs) { }
 
       /**
        * Populates the derivative vector with derivatives of the
@@ -533,56 +423,23 @@ namespace stan {
        */
       void operator()(const std::vector<double>& z,
                       std::vector<double>& dz_dt,
-                      double t) {
-        using std::vector;
+                      double t) const {
+        using Eigen::Map;
+        using Eigen::MatrixXd;
+        using Eigen::VectorXd;
 
-        vector<double> y(z.begin(), z.begin() + N_);
-        for (size_t n = 0; n < N_; n++)
-          y[n] += y0_dbl_[n];
+        const std::vector<double> y_base(z.begin(), z.begin() + N_);
+        Map<VectorXd> dz_dt_eig(&dz_dt[0], N_);
+        Map<MatrixXd> dZ_dt_sens(&dz_dt[0] + N_, N_, S_);
+        Map<const MatrixXd> Z_sens(&z[0] + N_, N_, S_);
+        // write Jtheta directly into correct position of dZ_dt
+        Map<MatrixXd> dZ_dt_sens_param(&dz_dt[0] + N_ + N_ * N_, N_, M_);
+        MatrixXd Jy(N_, N_);
 
-        dz_dt = f_(t, y, theta_dbl_, x_, x_int_, msgs_);
-        check_equal("coupled_ode_system",
-                    "dz_dt", dz_dt.size(), N_);
+        ode_system_.jacobian(t, y_base, dz_dt_eig, Jy, dZ_dt_sens_param);
 
-        vector<double> coupled_sys(N_ * (N_ + M_));
-        vector<double> grad(N_ + M_);
-
-        try {
-          start_nested();
-
-          vector<var> z_vars;
-          z_vars.reserve(N_ + M_);
-
-          vector<var> y_vars(y.begin(), y.end());
-          z_vars.insert(z_vars.end(), y_vars.begin(), y_vars.end());
-
-          vector<var> theta_vars(theta_dbl_.begin(), theta_dbl_.end());
-          z_vars.insert(z_vars.end(), theta_vars.begin(), theta_vars.end());
-
-          vector<var> dy_dt_vars = f_(t, y_vars, theta_vars, x_, x_int_, msgs_);
-
-          for (size_t i = 0; i < N_; i++) {
-            set_zero_all_adjoints_nested();
-            dy_dt_vars[i].grad(z_vars, grad);
-
-            for (size_t j = 0; j < N_ + M_; j++) {
-              // orders derivatives by equation (i.e. if there are 2 eqns
-              // (y1, y2) and 2 parameters (a, b), dy_dt will be ordered as:
-              // dy1_dt, dy2_dt, dy1_da, dy2_da, dy1_db, dy2_db
-              double temp_deriv = grad[j];
-              for (size_t k = 0; k < N_; k++)
-                temp_deriv += z[N_ + N_ * j + k] * grad[k];
-
-              coupled_sys[i + j * N_] = temp_deriv;
-            }
-          }
-        } catch (const std::exception& e) {
-          recover_memory_nested();
-          throw;
-        }
-        recover_memory_nested();
-
-        dz_dt.insert(dz_dt.end(), coupled_sys.begin(), coupled_sys.end());
+        dZ_dt_sens.leftCols(N_).setZero();
+        dZ_dt_sens += Jy * Z_sens;
       }
 
       /**
@@ -597,16 +454,18 @@ namespace stan {
       /**
        * Returns the initial state of the coupled system.
        *
-       * Because the initial state is unknown, the coupled system
-       * incorporates the initial condition offset from zero as
-       * a parameter, and hence the return of this function is a
-       * vector of zeros.
+       * Because the initial state is unknown, its initial is set to
+       * the identity matrix.
        *
-       * @return the initial condition of the coupled system.  This is
-       * a vector of length size() where all elements are 0.
+       * @return the initial condition of the coupled system.
        */
-      std::vector<double> initial_state() {
-        return std::vector<double>(size_, 0.0);
+      std::vector<double> initial_state() const {
+        std::vector<double> initial(size_, 0.0);
+        for (size_t i = 0; i < N_; i++)
+          initial[i] = y0_dbl_[i];
+        for (size_t i = 0; i < N_; i++)
+          initial[N_ + i * N_ + i] = 1.0;
+        return initial;
       }
 
       /**
@@ -617,7 +476,7 @@ namespace stan {
        * @param y the vector of the coupled states after solving the ode
        */
       std::vector<std::vector<var> >
-      decouple_states(const std::vector<std::vector<double> >& y) {
+      decouple_states(const std::vector<std::vector<double> >& y) const {
         using std::vector;
 
         vector<var> vars = y0_;
@@ -639,11 +498,10 @@ namespace stan {
           }
           y_return[i] = temp_vars;
         }
-        add_initial_values(y0_, y_return);
         return y_return;
       }
     };
-
   }
 }
+
 #endif
