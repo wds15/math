@@ -1,23 +1,20 @@
 #ifndef STAN_MATH_PRIM_SCAL_PROB_CHI_SQUARE_CDF_LOG_HPP
 #define STAN_MATH_PRIM_SCAL_PROB_CHI_SQUARE_CDF_LOG_HPP
 
-#include <stan/math/prim/scal/meta/is_constant_struct.hpp>
-#include <stan/math/prim/scal/meta/partials_return_type.hpp>
-#include <stan/math/prim/scal/meta/OperandsAndPartials.hpp>
 #include <stan/math/prim/scal/err/check_consistent_sizes.hpp>
 #include <stan/math/prim/scal/err/check_nonnegative.hpp>
 #include <stan/math/prim/scal/err/check_not_nan.hpp>
 #include <stan/math/prim/scal/err/check_positive_finite.hpp>
 #include <stan/math/prim/scal/fun/constants.hpp>
-#include <stan/math/prim/scal/fun/multiply_log.hpp>
+#include <stan/math/prim/scal/fun/digamma.hpp>
+#include <stan/math/prim/scal/fun/grad_reg_inc_gamma.hpp>
 #include <stan/math/prim/scal/fun/value_of.hpp>
 #include <stan/math/prim/scal/fun/gamma_p.hpp>
-#include <stan/math/prim/scal/fun/digamma.hpp>
-#include <stan/math/prim/scal/meta/VectorBuilder.hpp>
-#include <stan/math/prim/scal/fun/grad_reg_inc_gamma.hpp>
 #include <stan/math/prim/scal/meta/include_summand.hpp>
-#include <boost/random/chi_squared_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <stan/math/prim/scal/meta/is_constant_struct.hpp>
+#include <stan/math/prim/scal/meta/OperandsAndPartials.hpp>
+#include <stan/math/prim/scal/meta/partials_return_type.hpp>
+#include <stan/math/prim/scal/meta/VectorBuilder.hpp>
 #include <cmath>
 #include <limits>
 
@@ -33,15 +30,13 @@ namespace stan {
 
       T_partials_return cdf_log(0.0);
 
-      // Size checks
       if (!(stan::length(y) && stan::length(nu)))
         return cdf_log;
 
       check_not_nan(function, "Random variable", y);
       check_nonnegative(function, "Random variable", y);
       check_positive_finite(function, "Degrees of freedom parameter", nu);
-      check_consistent_sizes(function,
-                             "Random variable", y,
+      check_consistent_sizes(function, "Random variable", y,
                              "Degrees of freedom parameter", nu);
 
       // Wrap arguments in vectors
@@ -94,17 +89,15 @@ namespace stan {
 
         // Compute
         const T_partials_return Pn = gamma_p(alpha_dbl, beta_dbl * y_dbl);
-
         cdf_log += log(Pn);
 
         if (!is_constant_struct<T_y>::value)
           operands_and_partials.d_x1[n] += beta_dbl * exp(-beta_dbl * y_dbl)
-            * pow(beta_dbl * y_dbl, alpha_dbl-1) / tgamma(alpha_dbl) / Pn;
+            * pow(beta_dbl * y_dbl, alpha_dbl - 1) / tgamma(alpha_dbl) / Pn;
         if (!is_constant_struct<T_dof>::value)
           operands_and_partials.d_x2[n]
-            -= 0.5 * grad_reg_inc_gamma(alpha_dbl, beta_dbl
-                                        * y_dbl, gamma_vec[n],
-                                        digamma_vec[n]) / Pn;
+            -= 0.5 * grad_reg_inc_gamma(alpha_dbl, beta_dbl * y_dbl,
+                                        gamma_vec[n], digamma_vec[n]) / Pn;
       }
       return operands_and_partials.value(cdf_log);
     }

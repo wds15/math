@@ -1,23 +1,21 @@
 #ifndef STAN_MATH_PRIM_SCAL_PROB_CHI_SQUARE_CCDF_LOG_HPP
 #define STAN_MATH_PRIM_SCAL_PROB_CHI_SQUARE_CCDF_LOG_HPP
 
-#include <stan/math/prim/scal/meta/is_constant_struct.hpp>
-#include <stan/math/prim/scal/meta/partials_return_type.hpp>
-#include <stan/math/prim/scal/meta/OperandsAndPartials.hpp>
 #include <stan/math/prim/scal/err/check_consistent_sizes.hpp>
 #include <stan/math/prim/scal/err/check_nonnegative.hpp>
 #include <stan/math/prim/scal/err/check_not_nan.hpp>
 #include <stan/math/prim/scal/err/check_positive_finite.hpp>
 #include <stan/math/prim/scal/fun/constants.hpp>
+#include <stan/math/prim/scal/fun/digamma.hpp>
+#include <stan/math/prim/scal/fun/gamma_p.hpp>
+#include <stan/math/prim/scal/fun/grad_reg_inc_gamma.hpp>
 #include <stan/math/prim/scal/fun/multiply_log.hpp>
 #include <stan/math/prim/scal/fun/value_of.hpp>
-#include <stan/math/prim/scal/fun/gamma_p.hpp>
-#include <stan/math/prim/scal/fun/digamma.hpp>
-#include <stan/math/prim/scal/meta/VectorBuilder.hpp>
-#include <stan/math/prim/scal/fun/grad_reg_inc_gamma.hpp>
 #include <stan/math/prim/scal/meta/include_summand.hpp>
-#include <boost/random/chi_squared_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <stan/math/prim/scal/meta/is_constant_struct.hpp>
+#include <stan/math/prim/scal/meta/OperandsAndPartials.hpp>
+#include <stan/math/prim/scal/meta/partials_return_type.hpp>
+#include <stan/math/prim/scal/meta/VectorBuilder.hpp>
 #include <cmath>
 #include <limits>
 
@@ -40,8 +38,7 @@ namespace stan {
       check_not_nan(function, "Random variable", y);
       check_nonnegative(function, "Random variable", y);
       check_positive_finite(function, "Degrees of freedom parameter", nu);
-      check_consistent_sizes(function,
-                             "Random variable", y,
+      check_consistent_sizes(function, "Random variable", y,
                              "Degrees of freedom parameter", nu);
 
       // Wrap arguments in vectors
@@ -49,8 +46,7 @@ namespace stan {
       VectorView<const T_dof> nu_vec(nu);
       size_t N = max_size(y, nu);
 
-      OperandsAndPartials<T_y, T_dof>
-        operands_and_partials(y, nu);
+      OperandsAndPartials<T_y, T_dof> operands_and_partials(y, nu);
 
       // Explicit return for extreme values
       // The gradients are technically ill-defined, but treated as zero
@@ -93,9 +89,9 @@ namespace stan {
         const T_partials_return beta_dbl = 0.5;
 
         // Compute
-        const T_partials_return Pn = 1.0 - gamma_p(alpha_dbl, beta_dbl * y_dbl);
+        const T_partials_return Pn = gamma_p(alpha_dbl, beta_dbl * y_dbl);
 
-        ccdf_log += log(Pn);
+        ccdf_log += log1m(Pn);
 
         if (!is_constant_struct<T_y>::value)
           operands_and_partials.d_x1[n] -= beta_dbl * exp(-beta_dbl * y_dbl)
