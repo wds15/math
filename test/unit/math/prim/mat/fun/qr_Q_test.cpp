@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, qr_Q) {
-  stan::math::matrix_d m0(0,0);
-  stan::math::matrix_d m1(3,2);
+  Eigen::MatrixXd m0(0,0);
+  Eigen::MatrixXd m1(3,2);
   m1 << 1, 2, 3, 4, 5, 6;
 
   using stan::math::qr_Q;

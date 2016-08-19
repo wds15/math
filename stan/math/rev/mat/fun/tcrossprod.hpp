@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_TCROSSPROD_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/mat/fun/Eigen_NumTraits.hpp>
 #include <stan/math/rev/mat/fun/typedefs.hpp>
@@ -18,11 +17,11 @@ namespace stan {
     /**
      * Returns the result of post-multiplying a matrix by its
      * own transpose.
-     * @param M Matrix to multiply.
+     *
+     * @param[in] M Matrix to multiply.
      * @return M times its transpose.
      */
-    inline matrix_v
-    tcrossprod(const matrix_v& M) {
+    inline matrix_v tcrossprod(const matrix_v& M) {
       if (M.rows() == 0)
         return matrix_v(0, 0);
       // if (M.rows() == 1)

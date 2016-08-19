@@ -2,9 +2,9 @@
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, divide) {
-  stan::math::vector_d v0;
-  stan::math::row_vector_d rv0;
-  stan::math::matrix_d m0;
+  Eigen::VectorXd v0;
+  Eigen::RowVectorXd rv0;
+  Eigen::MatrixXd m0;
 
   using stan::math::divide;
   EXPECT_NO_THROW(divide(v0,2.0));

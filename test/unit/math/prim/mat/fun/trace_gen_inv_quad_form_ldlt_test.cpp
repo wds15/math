@@ -9,8 +9,7 @@
      */
 
 TEST(MathMatrix, trace_gen_inv_quad_form_ldlt) {
-  using stan::math::matrix_d;
-  matrix_d D(2,2), A(4,4), B(4,2), gen_inv_quad_form;
+  Eigen::MatrixXd D(2,2), A(4,4), B(4,2), gen_inv_quad_form;
   
   D << 1, 2, 3, 4;
   A << 9.0,  3.0, 3.0,   3.0, 
@@ -23,7 +22,6 @@ TEST(MathMatrix, trace_gen_inv_quad_form_ldlt) {
     5,  2;
   
   gen_inv_quad_form = D * B.transpose() * A.inverse() * B;
-  
 
   stan::math::LDLT_factor<double,-1,-1> ldlt_A;
   ldlt_A.compute(A);

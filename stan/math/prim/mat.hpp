@@ -187,7 +187,6 @@
 #include <stan/math/prim/mat/fun/trace_inv_quad_form_ldlt.hpp>
 #include <stan/math/prim/mat/fun/trace_quad_form.hpp>
 #include <stan/math/prim/mat/fun/transpose.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/fun/unit_vector_constrain.hpp>
 #include <stan/math/prim/mat/fun/unit_vector_free.hpp>
 #include <stan/math/prim/mat/fun/value_of.hpp>

@@ -3,7 +3,6 @@
 
 #include <stan/math/prim/mat/err/check_square.hpp>
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/mat/fun/typedefs.hpp>
 #include <vector>
@@ -31,8 +30,8 @@ namespace stan {
                      (ChainableStack::memalloc_
                       .alloc(sizeof(vari*) * A.rows() * A.cols()))) {
           size_t pos = 0;
-          for (size_type j = 0; j < cols_; j++) {
-            for (size_type i = 0; i < rows_; i++) {
+          for (int j = 0; j < cols_; j++) {
+            for (int i = 0; i < rows_; i++) {
               A_[pos] = A(i, j).val();
               adjARef_[pos++] = A(i, j).vi_;
             }
@@ -41,8 +40,8 @@ namespace stan {
         static
         double determinant_vari_calc(const Eigen::Matrix<var, R, C> &A) {
           Eigen::Matrix<double, R, C> Ad(A.rows(), A.cols());
-          for (size_type j = 0; j < A.rows(); j++)
-            for (size_type i = 0; i < A.cols(); i++)
+          for (int j = 0; j < A.rows(); j++)
+            for (int i = 0; i < A.cols(); i++)
               Ad(i, j) = A(i, j).val();
           return Ad.determinant();
         }
@@ -53,8 +52,8 @@ namespace stan {
           adjA = (adj_ * val_) *
             Map<Matrix<double, R, C> >(A_, rows_, cols_).inverse().transpose();
           size_t pos = 0;
-          for (size_type j = 0; j < cols_; j++) {
-            for (size_type i = 0; i < rows_; i++) {
+          for (int j = 0; j < cols_; j++) {
+            for (int i = 0; i < rows_; i++) {
               adjARef_[pos++]->adj_ += adjA(i, j);
             }
           }

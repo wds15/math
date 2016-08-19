@@ -1,6 +1,7 @@
 #include <stan/math/prim/mat.hpp>
-#include <gtest/gtest.h>
 #include <test/unit/util.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
+#include <gtest/gtest.h>
 
 TEST(MathMatrix, cholesky_decompose) {
   stan::math::matrix_d m0;

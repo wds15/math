@@ -1,4 +1,5 @@
 #include <stan/math.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 

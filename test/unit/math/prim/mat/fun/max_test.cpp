@@ -1,4 +1,5 @@
 #include <stan/math/prim/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, max) {
@@ -53,12 +54,12 @@ TEST(MathMatrix, max) {
   rv << 1.0, 0.0, 2.0, -10.0;
   EXPECT_FLOAT_EQ(2.0,max(rv));
 
-  stan::math::matrix_d m;
+  Eigen::MatrixXd m;
   EXPECT_FLOAT_EQ(-std::numeric_limits<double>::infinity(),max(m));
-  m = stan::math::matrix_d(1,1);
+  m = Eigen::MatrixXd(1,1);
   m << 1.0;
   EXPECT_FLOAT_EQ(1.0,max(m));
-  m = stan::math::matrix_d(2,2);
+  m = Eigen::MatrixXd(2,2);
   m << 1.0, 0.0, 2.0, -10.0;
   EXPECT_FLOAT_EQ(2.0,max(m));
 }

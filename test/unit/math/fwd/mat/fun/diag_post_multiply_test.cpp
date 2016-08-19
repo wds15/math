@@ -1,4 +1,5 @@
 #include <stan/math/fwd/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 using stan::math::matrix_d;

@@ -1,4 +1,5 @@
 #include <stan/math/rev/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 TEST(AgradRevMatrix, mdivide_right_ldlt_vv) {

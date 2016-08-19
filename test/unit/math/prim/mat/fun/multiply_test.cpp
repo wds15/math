@@ -1,4 +1,5 @@
 #include <stan/math/prim/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 TEST(MathMatrix,multiply_c_v) {

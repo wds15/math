@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_CHOLESKY_DECOMPOSE_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/fun/cholesky_decompose.hpp>
 #include <stan/math/rev/scal/fun/value_of_rec.hpp>
 #include <stan/math/rev/scal/fun/value_of.hpp>
@@ -21,25 +20,20 @@ namespace stan {
       vari** variRefA_;
       vari** variRefL_;
 
-      /* ctor for cholesky function
+      /**
+       * Stores varis for A.  Instantiates and stores varis for L.
+       * Instantiates and stores dummy vari for upper triangular part
+       * of var result returned in cholesky_decompose function call.
        *
-       * Stores varis for A
-       * Instantiates and stores varis for L
-       * Instantiates and stores dummy vari for
-       * upper triangular part of var result returned
-       * in cholesky_decompose function call
+       * The variRefL aren't on the chainablen autodiff stack, only
+       * used for storage and computation. Note that varis for L are
+       * constructed externally in cholesky_decompose.
        *
-       * variRefL aren't on the chainable
-       * autodiff stack, only used for storage
-       * and computation. Note that varis for
-       * L are constructed externally in
-       * cholesky_decompose.
-       *
-       * @param matrix A
-       * @param matrix L, cholesky factor of A
-       * */
+       * @param[in] matrix A
+       * @param[in] matrix L, cholesky factor of A
+       */
       cholesky_decompose_v_vari(const Eigen::Matrix<var, -1, -1>& A,
-                                const Eigen::Matrix<double, -1, -1>& L_A)
+                                const Eigen::MatrixXd& L_A)
         : vari(0.0),
           M_(A.rows()),
           variRefA_(ChainableStack::memalloc_.alloc_array<vari*>
@@ -48,8 +42,8 @@ namespace stan {
                     (A.rows() * (A.rows() + 1) / 2)) {
         size_t accum = 0;
         size_t accum_i = accum;
-        for (size_type j = 0; j < M_; ++j) {
-          for (size_type i = j; i < M_; ++i) {
+        for (int j = 0; j < M_; ++j) {
+          for (int i = j; i < M_; ++i) {
             accum_i += i;
             size_t pos = j + accum_i;
             variRefA_[pos] = A.coeffRef(i, j).vi_;
@@ -60,21 +54,18 @@ namespace stan {
         }
       }
 
-      /* Reverse mode differentiation
-       * algorithm refernce:
+      /**
+       * Propagate derivatives.
        *
-       * Mike Giles. An extended collection of matrix
-       * derivative results for forward and reverse mode AD.
-       * Jan. 2008.
+       * Mike Giles. An extended collection of matrix derivative
+       * results for forward and reverse mode AD.  Jan. 2008.
        *
-       * Note algorithm  as laid out in Giles is
-       * row-major, so Eigen::Matrices are explicitly storage
-       * order RowMajor, whereas Eigen defaults to
-       * ColumnMajor. Also note algorithm
-       * starts by calculating the adjoint for
-       * A(M_ - 1, M_ - 1), hence pos on line 94 is decremented
-       * to start at pos = M_ * (M_ + 1) / 2.
-       * */
+       * Note algorithm as laid out in Giles is row-major, so Eigen
+       * matrices are explicitly storage order RowMajor, whereas Eigen
+       * defaults to ColumnMajor. Also note algorithm starts by
+       * calculating the adjoint for A(M_ - 1, M_ - 1), hence pos on
+       * line 94 is decremented to start at pos = M_ * (M_ + 1) / 2.
+       */
       virtual void chain() {
         using Eigen::Matrix;
         using Eigen::RowMajor;
@@ -82,8 +73,8 @@ namespace stan {
         Matrix<double, -1, -1, RowMajor> LA(M_, M_);
         Matrix<double, -1, -1, RowMajor> adjA(M_, M_);
         size_t pos = 0;
-        for (size_type i = 0; i < M_; ++i) {
-          for (size_type j = 0; j <= i; ++j) {
+        for (int i = 0; i < M_; ++i) {
+          for (int j = 0; j <= i; ++j) {
             adjL.coeffRef(i, j) = variRefL_[pos]->adj_;
             LA.coeffRef(i, j) = variRefL_[pos]->val_;
             ++pos;
@@ -114,17 +105,16 @@ namespace stan {
       }
     };
 
-    /* Reverse mode specialization of
-     * cholesky decomposition
+    /**
+     * Reverse mode specialization of cholesky decomposition.
      *
-     * Internally calls llt rather than using
-     * cholesky_decompose in order
-     * to use selfadjointView<Lower> optimization.
+     * Internally calls llt rather than using cholesky_decompose in
+     * order to use selfadjointView<Lower> optimization.
      *
-     * Note chainable stack varis are created
-     * below in Matrix<var, -1, -1>
+     * Note chainable stack varis are created below in Matrix<var, -1,
+     * -1>.
      *
-     * @param Matrix A
+     * @param[in] Matrix A
      * @return L cholesky factor of A
      */
     inline Eigen::Matrix<var, -1, -1>
@@ -138,23 +128,19 @@ namespace stan {
       check_pos_definite("cholesky_decompose", "m", L_factor);
       L_A = L_factor.matrixL();
 
-      // NOTE: this is not a memory leak, this vari is used in the
-      // expression graph to evaluate the adjoint, but is not needed
-      // for the returned matrix.  Memory will be cleaned up with the
-      // arena allocator.
       cholesky_decompose_v_vari *baseVari
         = new cholesky_decompose_v_vari(A, L_A);
       vari dummy(0.0, false);
       Eigen::Matrix<var, -1, -1> L(A.rows(), A.cols());
       size_t accum = 0;
       size_t accum_i = accum;
-      for (size_type j = 0; j < L.cols(); ++j) {
-        for (size_type i = j; i < L.cols(); ++i) {
+      for (int j = 0; j < L.cols(); ++j) {
+        for (int i = j; i < L.cols(); ++i) {
           accum_i += i;
           size_t pos = j + accum_i;
           L.coeffRef(i, j).vi_ = baseVari->variRefL_[pos];
         }
-        for (size_type k = 0; k < j; ++k)
+        for (int k = 0; k < j; ++k)
           L.coeffRef(k, j).vi_ = &dummy;
         accum += j;
         accum_i = accum;

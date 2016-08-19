@@ -5,7 +5,6 @@
 #include <boost/type_traits.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/rev/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/fun/value_of.hpp>
 #include <stan/math/prim/mat/fun/quad_form.hpp>
@@ -132,6 +131,7 @@ namespace stan {
 
       return baseVari->impl_->C_;
     }
+
     template <typename TA, int RA, int CA, typename TB, int RB>
     inline typename
     boost::enable_if_c< boost::is_same<TA, var>::value ||

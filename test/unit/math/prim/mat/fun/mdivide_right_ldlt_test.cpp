@@ -3,8 +3,8 @@
 
 TEST(MathMatrix,mdivide_right_ldlt_val) {
   stan::math::LDLT_factor<double,-1,-1> ldlt_Ad;
-  stan::math::matrix_d Ad(2,2);
-  stan::math::matrix_d I;
+  Eigen::MatrixXd Ad(2,2);
+  Eigen::MatrixXd I;
 
   Ad << 2.0, 3.0, 
         3.0, 7.0;

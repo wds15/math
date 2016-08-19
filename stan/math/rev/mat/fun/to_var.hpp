@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_TO_VAR_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/mat/fun/typedefs.hpp>
 #include <stan/math/rev/scal/fun/to_var.hpp>
@@ -18,13 +17,14 @@ namespace stan {
      * @param[in] m A Matrix with scalars
      * @return A Matrix with automatic differentiation variables
      */
-    inline matrix_v to_var(const matrix_d& m) {
+    inline matrix_v to_var(const Eigen::MatrixXd& m) {
       matrix_v m_v(m.rows(), m.cols());
       for (int j = 0; j < m.cols(); ++j)
         for (int i = 0; i < m.rows(); ++i)
           m_v(i, j) = m(i, j);
       return m_v;
     }
+
     /**
      * Converts argument to an automatic differentiation variable.
      *
@@ -36,6 +36,7 @@ namespace stan {
     inline matrix_v to_var(const matrix_v& m) {
       return m;
     }
+
     /**
      * Converts argument to an automatic differentiation variable.
      *
@@ -45,12 +46,13 @@ namespace stan {
      * @return A Vector of automatic differentiation variables with
      *   values of v
      */
-    inline vector_v to_var(const vector_d& v) {
+    inline vector_v to_var(const Eigen::VectorXd& v) {
       vector_v v_v(v.size());
       for (int i = 0; i < v.size(); ++i)
         v_v[i] = v[i];
       return v_v;
     }
+
     /**
      * Converts argument to an automatic differentiation variable.
      *
@@ -63,6 +65,7 @@ namespace stan {
     inline vector_v to_var(const vector_v& v) {
       return v;
     }
+
     /**
      * Converts argument to an automatic differentiation variable.
      *
@@ -72,12 +75,13 @@ namespace stan {
      * @return A row vector of automatic differentation variables with
      *   values of rv.
      */
-    inline row_vector_v to_var(const row_vector_d& rv) {
+    inline row_vector_v to_var(const Eigen::RowVectorXd& rv) {
       row_vector_v rv_v(rv.size());
       for (int i = 0; i < rv.size(); ++i)
         rv_v[i] = rv[i];
       return rv_v;
     }
+
     /**
      * Converts argument to an automatic differentiation variable.
      *

@@ -1,4 +1,5 @@
 #include <stan/math/prim/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 TEST(MathMatrix,sumVector) {
@@ -6,14 +7,14 @@ TEST(MathMatrix,sumVector) {
   using Eigen::Matrix;
   using Eigen::Dynamic;
 
-  stan::math::vector_d v;
+  Eigen::VectorXd v;
   EXPECT_FLOAT_EQ(0.0, sum(v));
 
-  v = stan::math::vector_d(1);
+  v = Eigen::VectorXd(1);
   v[0] = 5.0;
   EXPECT_FLOAT_EQ(5.0,sum(v));
 
-  v = stan::math::vector_d(3);
+  v = Eigen::VectorXd(3);
   v[0] = 5.0;
   v[1] = 10.0;
   v[2] = 100.0;

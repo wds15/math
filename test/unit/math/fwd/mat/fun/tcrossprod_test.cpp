@@ -1,4 +1,5 @@
 #include <stan/math/fwd/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 TEST(AgradFwdMatrixTCrossProd, fd_3x3_matrix) {

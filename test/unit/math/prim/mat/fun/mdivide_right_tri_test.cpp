@@ -3,8 +3,8 @@
 
 TEST(MathMatrix,mdivide_right_tri_val) {
   using stan::math::mdivide_right_tri;
-  stan::math::matrix_d Ad(2,2);
-  stan::math::matrix_d I;
+  Eigen::MatrixXd Ad(2,2);
+  Eigen::MatrixXd I;
 
   Ad << 2.0, 0.0, 
         5.0, 7.0;

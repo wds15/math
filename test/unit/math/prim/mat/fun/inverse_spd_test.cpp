@@ -4,13 +4,13 @@
 TEST(MathMatrix, inverse_spd_exception) {
   using stan::math::inverse_spd;
 
-  stan::math::matrix_d m1(2,3);
+  Eigen::MatrixXd m1(2,3);
   
   // non-square
   m1 << 1, 2, 3, 4, 5, 6;
   EXPECT_THROW(inverse_spd(m1),std::invalid_argument);
 
-  stan::math::matrix_d m2(3,3);
+  Eigen::MatrixXd m2(3,3);
   
   // non-symmetric
   m2 << 1, 2, 3, 4, 5, 6, 7, 8, 9;  

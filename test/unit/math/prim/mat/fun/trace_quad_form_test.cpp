@@ -3,11 +3,8 @@
 
 TEST(MathMatrix, trace_quad_form_mat) {
   using stan::math::trace_quad_form;
-  using stan::math::matrix_d;
   
-  matrix_d ad(4,4);
-  matrix_d bd(4,2);
-  double res;
+  Eigen::MatrixXd ad(4, 4), bd(4, 2);
   bd << 100, 10,
           0,  1,
          -3, -3,
@@ -18,6 +15,6 @@ TEST(MathMatrix, trace_quad_form_mat) {
   8.0,  2.0, 1.0, 112.0;
   
   // double-double
-  res = trace_quad_form(ad,bd);
+  double res = trace_quad_form(ad,bd);
   EXPECT_FLOAT_EQ(26758, res);
 }

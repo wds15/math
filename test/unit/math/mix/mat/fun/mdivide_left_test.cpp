@@ -1,6 +1,7 @@
 #include <stan/math/mix/mat.hpp>
 #include <gtest/gtest.h>
 #include <test/unit/math/rev/mat/fun/util.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 
 using stan::math::fvar;
 TEST(AgradMixMatrixMdivideLeft,fv_matrix_matrix_1stDeriv) {

@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_SUM_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/arr/fun/sum.hpp>
 
@@ -43,7 +42,7 @@ namespace stan {
      *
      * @tparam R Row type for matrix.
      * @tparam C Column type for matrix.
-     * @param m Specified matrix or vector.
+     * @param[in] m Specified matrix or vector.
      * @return Sum of coefficients of matrix.
      */
     template <int R, int C>

@@ -2,10 +2,10 @@
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, eigenvectors_sym) {
-  stan::math::matrix_d m0;
-  stan::math::matrix_d m1(2,3);
+  Eigen::MatrixXd m0;
+  Eigen::MatrixXd m1(2,3);
   m1 << 1, 2, 3, 4, 5, 6;
-  stan::math::matrix_d ev_m1(1,1);
+  Eigen::MatrixXd ev_m1(1,1);
   ev_m1 << 2.0;
 
   using stan::math::eigenvectors_sym;

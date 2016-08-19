@@ -1,10 +1,11 @@
 #include <stan/math/prim/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <gtest/gtest.h>
 
 TEST(MathMatrix,mdivide_right_val) {
   using stan::math::mdivide_right;
-  stan::math::matrix_d Ad(2,2);
-  stan::math::matrix_d I;
+  Eigen::MatrixXd Ad(2,2);
+  Eigen::MatrixXd I;
 
   Ad << 2.0, 3.0, 
         5.0, 7.0;
@@ -19,7 +20,7 @@ TEST(MathMatrix,mdivide_right_val) {
 TEST(MathMatrix,mdivide_right_val2) {
   using stan::math::mdivide_right;
   stan::math::row_vector_d b(5);
-  stan::math::matrix_d A(5,5);
+  Eigen::MatrixXd A(5,5);
   stan::math::row_vector_d expected(5);
   stan::math::row_vector_d x;
 

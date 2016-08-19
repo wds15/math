@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_DOT_PRODUCT_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/err/check_vector.hpp>
 #include <stan/math/prim/arr/err/check_matching_sizes.hpp>
 #include <stan/math/prim/scal/fun/value_of.hpp>
@@ -35,12 +34,12 @@ namespace stan {
       protected:
         typename dot_product_store_type<T1>::type v1_;
         typename dot_product_store_type<T2>::type v2_;
-        size_t length_;
+        int length_;
 
         inline static double var_dot(vari** v1, vari** v2,
-                                     size_t length) {
+                                     int length) {
           Eigen::VectorXd vd1(length), vd2(length);
-          for (size_t i = 0; i < length; i++) {
+          for (int i = 0; i < length; i++) {
             vd1[i] = v1[i]->val_;
             vd2[i] = v2[i]->val_;
           }
@@ -48,9 +47,9 @@ namespace stan {
         }
 
         inline static double var_dot(const T1* v1, const T2* v2,
-                                     size_t length) {
+                                     int length) {
           Eigen::VectorXd vd1(length), vd2(length);
-          for (size_t i = 0; i < length; i++) {
+          for (int i = 0; i < length; i++) {
             vd1[i] = value_of(v1[i]);
             vd2[i] = value_of(v2[i]);
           }
@@ -68,18 +67,18 @@ namespace stan {
           return vd1.dot(vd2);
         }
         inline void chain(vari** v1, vari** v2) {
-          for (size_t i = 0; i < length_; i++) {
+          for (int i = 0; i < length_; i++) {
             v1[i]->adj_ += adj_ * v2_[i]->val_;
             v2[i]->adj_ += adj_ * v1_[i]->val_;
           }
         }
         inline void chain(double* v1, vari** v2) {
-          for (size_t i = 0; i < length_; i++) {
+          for (int i = 0; i < length_; i++) {
             v2[i]->adj_ += adj_ * v1_[i];
           }
         }
         inline void chain(vari** v1, double* v2) {
-          for (size_t i = 0; i < length_; i++) {
+          for (int i = 0; i < length_; i++) {
             v1[i]->adj_ += adj_ * v2_[i];
           }
         }
@@ -88,7 +87,7 @@ namespace stan {
           if (shared == NULL) {
             mem_v = reinterpret_cast<vari**>(ChainableStack::memalloc_
                                              .alloc(length_*sizeof(vari*)));
-            for (size_t i = 0; i < length_; i++)
+            for (int i = 0; i < length_; i++)
               mem_v[i] = inv[i].vi_;
           } else {
             mem_v = shared;
@@ -101,7 +100,7 @@ namespace stan {
           if (shared == NULL) {
             mem_v = reinterpret_cast<vari**>(ChainableStack::memalloc_
                                              .alloc(length_*sizeof(vari*)));
-            for (size_t i = 0; i < length_; i++)
+            for (int i = 0; i < length_; i++)
               mem_v[i] = inv(i).vi_;
           } else {
             mem_v = shared;
@@ -113,7 +112,7 @@ namespace stan {
           if (shared == NULL) {
             mem_d = reinterpret_cast<double*>(ChainableStack::memalloc_
                                               .alloc(length_*sizeof(double)));
-            for (size_t i = 0; i < length_; i++)
+            for (int i = 0; i < length_; i++)
               mem_d[i] = ind[i];
           } else {
             mem_d = shared;
@@ -126,7 +125,7 @@ namespace stan {
           if (shared == NULL) {
             mem_d = reinterpret_cast<double*>
               (ChainableStack::memalloc_.alloc(length_*sizeof(double)));
-            for (size_t i = 0; i < length_; i++)
+            for (int i = 0; i < length_; i++)
               mem_d[i] = ind(i);
           } else {
             mem_d = shared;
@@ -136,10 +135,10 @@ namespace stan {
       public:
         dot_product_vari(typename dot_product_store_type<T1>::type v1,
                          typename dot_product_store_type<T2>::type v2,
-                         size_t length)
+                         int length)
           : vari(var_dot(v1, v2, length)), v1_(v1), v2_(v2), length_(length) {}
 
-        dot_product_vari(const T1* v1, const T2* v2, size_t length,
+        dot_product_vari(const T1* v1, const T2* v2, int length,
                          dot_product_vari<T1, T2>* shared_v1 = NULL,
                          dot_product_vari<T1, T2>* shared_v2 = NULL) :
           vari(var_dot(v1, v2, length)), length_(length) {
@@ -215,6 +214,7 @@ namespace stan {
                            "v2", v2);
       return var(new dot_product_vari<T1, T2>(v1, v2));
     }
+
     /**
      * Returns the dot product.
      *
@@ -227,7 +227,7 @@ namespace stan {
     inline
     typename boost::enable_if_c<boost::is_same<T1, var>::value ||
     boost::is_same<T2, var>::value, var>::type
-      dot_product(const T1* v1, const T2* v2, size_t length) {
+      dot_product(const T1* v1, const T2* v2, int length) {
       return var(new dot_product_vari<T1, T2>(v1, v2, length));
     }
 

@@ -38,7 +38,7 @@ TEST(MathMatrix,softmax) {
   // x << 0.0;
   // test_log_softmax(x);
 
-  stan::math::vector_d x2(2);
+  Eigen::VectorXd x2(2);
   x2 << -1.0, 1.0;
   test_log_softmax(x2);
 
@@ -48,7 +48,7 @@ TEST(MathMatrix,softmax) {
 }
 TEST(MathMatrix,softmax_exception) {
   using stan::math::log_softmax;
-  stan::math::vector_d v0;  // size == 0
+  Eigen::VectorXd v0;  // size == 0
 
   EXPECT_THROW(log_softmax(v0),std::invalid_argument);
 }  

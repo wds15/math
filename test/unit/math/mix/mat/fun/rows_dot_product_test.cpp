@@ -1,6 +1,7 @@
 #include <stan/math/mix/mat.hpp>
-#include <gtest/gtest.h>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
+#include <gtest/gtest.h>
 
 TEST(AgradMixMatrixRowsDotProduct,fv_vector_vector_1stDeriv) {
   using stan::math::vector_d;

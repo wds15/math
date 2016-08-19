@@ -1,6 +1,7 @@
 #include <stan/math/rev/mat.hpp>
-#include <gtest/gtest.h>
+#include <test/unit/math/prim/mat/typedefs.hpp>
 #include <test/unit/math/rev/mat/fun/util.hpp>
+#include <gtest/gtest.h>
 
 TEST(AgradRevMatrix,mv_squaredNorm) {
   using stan::math::matrix_v;

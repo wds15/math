@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_MDIVIDE_LEFT_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/err/check_multiplicable.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/mat/fun/typedefs.hpp>
@@ -48,16 +47,16 @@ namespace stan {
           using Eigen::Map;
 
           size_t pos = 0;
-          for (size_type j = 0; j < M_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < M_; j++) {
+            for (int i = 0; i < M_; i++) {
               variRefA_[pos] = A(i, j).vi_;
               A_[pos++] = A(i, j).val();
             }
           }
 
           pos = 0;
-          for (size_type j = 0; j < N_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < N_; j++) {
+            for (int i = 0; i < M_; i++) {
               variRefB_[pos] = B(i, j).vi_;
               C_[pos++] = B(i, j).val();
             }
@@ -70,8 +69,8 @@ namespace stan {
             .colPivHouseholderQr().solve(C);
 
           pos = 0;
-          for (size_type j = 0; j < N_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < N_; j++) {
+            for (int i = 0; i < M_; i++) {
               C_[pos] = C(i, j);
               variRefC_[pos] = new vari(C_[pos], false);
               pos++;
@@ -87,8 +86,8 @@ namespace stan {
           Eigen::Matrix<double, R1, C2> adjC(M_, N_);
 
           size_t pos = 0;
-          for (size_type j = 0; j < adjC.cols(); j++)
-            for (size_type i = 0; i < adjC.rows(); i++)
+          for (int j = 0; j < adjC.cols(); j++)
+            for (int i = 0; i < adjC.rows(); i++)
               adjC(i, j) = variRefC_[pos++]->adj_;
 
           adjB = Map<Matrix<double, R1, C1> >(A_, M_, M_)
@@ -97,13 +96,13 @@ namespace stan {
             * Map<Matrix<double, R1, C2> >(C_, M_, N_).transpose();
 
           pos = 0;
-          for (size_type j = 0; j < adjA.cols(); j++)
-            for (size_type i = 0; i < adjA.rows(); i++)
+          for (int j = 0; j < adjA.cols(); j++)
+            for (int i = 0; i < adjA.rows(); i++)
               variRefA_[pos++]->adj_ += adjA(i, j);
 
           pos = 0;
-          for (size_type j = 0; j < adjB.cols(); j++)
-            for (size_type i = 0; i < adjB.rows(); i++)
+          for (int j = 0; j < adjB.cols(); j++)
+            for (int i = 0; i < adjB.rows(); i++)
               variRefB_[pos++]->adj_ += adjB(i, j);
         }
       };
@@ -139,15 +138,15 @@ namespace stan {
           using Eigen::Map;
 
           size_t pos = 0;
-          for (size_type j = 0; j < M_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < M_; j++) {
+            for (int i = 0; i < M_; i++) {
               A_[pos++] = A(i, j);
             }
           }
 
           pos = 0;
-          for (size_type j = 0; j < N_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < N_; j++) {
+            for (int i = 0; i < M_; i++) {
               variRefB_[pos] = B(i, j).vi_;
               C_[pos++] = B(i, j).val();
             }
@@ -160,8 +159,8 @@ namespace stan {
             .colPivHouseholderQr().solve(C);
 
           pos = 0;
-          for (size_type j = 0; j < N_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < N_; j++) {
+            for (int i = 0; i < M_; i++) {
               C_[pos] = C(i, j);
               variRefC_[pos] = new vari(C_[pos], false);
               pos++;
@@ -176,16 +175,16 @@ namespace stan {
           Eigen::Matrix<double, R1, C2> adjC(M_, N_);
 
           size_t pos = 0;
-          for (size_type j = 0; j < adjC.cols(); j++)
-            for (size_type i = 0; i < adjC.rows(); i++)
+          for (int j = 0; j < adjC.cols(); j++)
+            for (int i = 0; i < adjC.rows(); i++)
               adjC(i, j) = variRefC_[pos++]->adj_;
 
           adjB = Map<Matrix<double, R1, C1> >(A_, M_, M_)
             .transpose().colPivHouseholderQr().solve(adjC);
 
           pos = 0;
-          for (size_type j = 0; j < adjB.cols(); j++)
-            for (size_type i = 0; i < adjB.rows(); i++)
+          for (int j = 0; j < adjB.cols(); j++)
+            for (int i = 0; i < adjB.rows(); i++)
               variRefB_[pos++]->adj_ += adjB(i, j);
         }
       };
@@ -221,8 +220,8 @@ namespace stan {
           using Eigen::Map;
 
           size_t pos = 0;
-          for (size_type j = 0; j < M_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < M_; j++) {
+            for (int i = 0; i < M_; i++) {
               variRefA_[pos] = A(i, j).vi_;
               A_[pos++] = A(i, j).val();
             }
@@ -233,8 +232,8 @@ namespace stan {
             .colPivHouseholderQr().solve(B);
 
           pos = 0;
-          for (size_type j = 0; j < N_; j++) {
-            for (size_type i = 0; i < M_; i++) {
+          for (int j = 0; j < N_; j++) {
+            for (int i = 0; i < M_; i++) {
               C_[pos] = C(i, j);
               variRefC_[pos] = new vari(C_[pos], false);
               pos++;
@@ -249,8 +248,8 @@ namespace stan {
           Eigen::Matrix<double, R1, C2> adjC(M_, N_);
 
           size_t pos = 0;
-          for (size_type j = 0; j < adjC.cols(); j++)
-            for (size_type i = 0; i < adjC.rows(); i++)
+          for (int j = 0; j < adjC.cols(); j++)
+            for (int i = 0; i < adjC.rows(); i++)
               adjC(i, j) = variRefC_[pos++]->adj_;
 
           // FIXME: add .noalias() to LHS
@@ -260,8 +259,8 @@ namespace stan {
             .solve(adjC*Map<Matrix<double, R1, C2> >(C_, M_, N_).transpose());
 
           pos = 0;
-          for (size_type j = 0; j < adjA.cols(); j++)
-            for (size_type i = 0; i < adjA.rows(); i++)
+          for (int j = 0; j < adjA.cols(); j++)
+            for (int i = 0; i < adjA.rows(); i++)
               variRefA_[pos++]->adj_ += adjA(i, j);
         }
       };
@@ -287,8 +286,8 @@ namespace stan {
         = new mdivide_left_vv_vari<R1, C1, R2, C2>(A, b);
 
       size_t pos = 0;
-      for (size_type j = 0; j < res.cols(); j++)
-        for (size_type i = 0; i < res.rows(); i++)
+      for (int j = 0; j < res.cols(); j++)
+        for (int i = 0; i < res.rows(); i++)
           res(i, j).vi_ = baseVari->variRefC_[pos++];
 
       return res;
@@ -314,8 +313,8 @@ namespace stan {
         = new mdivide_left_vd_vari<R1, C1, R2, C2>(A, b);
 
       size_t pos = 0;
-      for (size_type j = 0; j < res.cols(); j++)
-        for (size_type i = 0; i < res.rows(); i++)
+      for (int j = 0; j < res.cols(); j++)
+        for (int i = 0; i < res.rows(); i++)
           res(i, j).vi_ = baseVari->variRefC_[pos++];
 
       return res;
@@ -341,8 +340,8 @@ namespace stan {
         = new mdivide_left_dv_vari<R1, C1, R2, C2>(A, b);
 
       size_t pos = 0;
-      for (size_type j = 0; j < res.cols(); j++)
-        for (size_type i = 0; i < res.rows(); i++)
+      for (int j = 0; j < res.cols(); j++)
+        for (int i = 0; i < res.rows(); i++)
           res(i, j).vi_ = baseVari->variRefC_[pos++];
 
       return res;

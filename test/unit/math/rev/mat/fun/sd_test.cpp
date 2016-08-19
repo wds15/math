@@ -1,9 +1,9 @@
 #include <stan/math/rev/mat.hpp>
+#include <test/unit/math/prim/mat/typedefs.hpp>
+#include <test/unit/math/rev/mat/fun/util.hpp>
 #include <gtest/gtest.h>
-
 #include <iostream>
 
-#include <test/unit/math/rev/mat/fun/util.hpp>
 
 TEST(AgradRevMatrix, sd_eq) {
   using stan::math::sd;

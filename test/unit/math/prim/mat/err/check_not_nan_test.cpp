@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 TEST(ErrorHandlingMatrix, checkNotNanEigenRow) {
-  stan::math::vector_d y;
+  Eigen::VectorXd y;
   y.resize(3);
   
   EXPECT_TRUE(stan::math::check_not_nan("checkNotNanEigenRow(%1)",

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, diagonal) {
-  stan::math::matrix_d m0;
+  Eigen::MatrixXd m0;
 
   using stan::math::diagonal;
   EXPECT_NO_THROW(diagonal(m0));

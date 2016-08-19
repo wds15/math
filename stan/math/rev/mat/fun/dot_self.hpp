@@ -2,7 +2,6 @@
 #define STAN_MATH_REV_MAT_FUN_DOT_SELF_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/err/check_vector.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/mat/fun/typedefs.hpp>
@@ -15,10 +14,10 @@ namespace stan {
       class dot_self_vari : public vari {
       protected:
         vari** v_;
-        size_t size_;
+        int size_;
 
       public:
-        dot_self_vari(vari** v, size_t size)
+        dot_self_vari(vari** v, int size)
           : vari(var_dot_self(v, size)),
             v_(v),
             size_(size) {
@@ -28,7 +27,7 @@ namespace stan {
           vari(var_dot_self(v)), size_(v.size()) {
           v_ = reinterpret_cast<vari**>(ChainableStack::memalloc_
                                         .alloc(size_*sizeof(vari*)));
-          for (size_t i = 0; i < size_; i++)
+          for (int i = 0; i < size_; i++)
             v_[i] = v[i].vi_;
         }
         template <int R, int C>
@@ -36,13 +35,13 @@ namespace stan {
           vari(var_dot_self(v)), size_(v.size()) {
           v_ = reinterpret_cast<vari**>
             (ChainableStack::memalloc_.alloc(size_ * sizeof(vari*)));
-          for (size_t i = 0; i < size_; ++i)
+          for (int i = 0; i < size_; ++i)
             v_[i] = v(i).vi_;
         }
         inline static double square(double x) { return x * x; }
-        inline static double var_dot_self(vari** v, size_t size) {
+        inline static double var_dot_self(vari** v, int size) {
           double sum = 0.0;
-          for (size_t i = 0; i < size; ++i)
+          for (int i = 0; i < size; ++i)
             sum += square(v[i]->val_);
           return sum;
         }
@@ -61,7 +60,7 @@ namespace stan {
           return sum;
         }
         virtual void chain() {
-          for (size_t i = 0; i < size_; ++i)
+          for (int i = 0; i < size_; ++i)
             v_[i]->adj_ += adj_ * 2.0 * v_[i]->val_;
         }
       };

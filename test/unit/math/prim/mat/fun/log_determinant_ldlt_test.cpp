@@ -1,4 +1,5 @@
 #include <stan/math/prim/mat.hpp>
+
 #include <gtest/gtest.h>
 
 TEST(MathMatrix, log_deterimant_ldlt) {
@@ -6,7 +7,7 @@ TEST(MathMatrix, log_deterimant_ldlt) {
   using std::log;
   using std::fabs;
   
-  stan::math::matrix_d x(2,2);  
+  Eigen::MatrixXd x(2,2);  
   stan::math::LDLT_factor<double,-1,-1> ldlt_x;
 
   x << 2, 1, 1, 3;
