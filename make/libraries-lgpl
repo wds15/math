@@ -1,0 +1,3 @@
+ODESD ?= $(MATH)lib/odeSDcpp_0.9
+
+CFLAGS += -DSTAN_USE_LGPL -isystem $(ODESD)/odeSD

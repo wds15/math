@@ -36,8 +36,11 @@ LDLIBS =
 EXE =
 WINE =
 
+-include make/libraries-lgpl              # add LGPL libraries which can be disabled
+
 -include $(HOME)/.config/stan/make.local  # define local variables
 -include make/local                       # overwrite local variables
+
 
 ##
 # Get information about the compiler used.
