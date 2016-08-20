@@ -4,7 +4,7 @@
 #include <stan/math/prim/mat/fun/Eigen.hpp>
 #include <stan/math/prim/scal/err/invalid_argument.hpp>
 #include <stan/math/prim/scal/err/check_size_match.hpp>
-#include <stan/math/prim/mat/err/check_matching_sizes.hpp>
+#include <stan/math/prim/arr/err/check_matching_sizes.hpp>
 #include <stan/math/prim/mat/err/check_matching_dims.hpp>
 #include <iostream>
 #include <sstream>
@@ -28,8 +28,6 @@ namespace stan {
       else
         o << n;
     }
-
-    // Recursive assignment with size match checking and promotion
 
     /**
      * Copy the right-hand side's value to the left-hand side

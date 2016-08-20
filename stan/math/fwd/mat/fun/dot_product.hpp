@@ -4,7 +4,7 @@
 #include <stan/math/prim/mat/fun/Eigen.hpp>
 #include <stan/math/prim/mat/fun/typedefs.hpp>
 #include <stan/math/prim/mat/err/check_vector.hpp>
-#include <stan/math/prim/mat/err/check_matching_sizes.hpp>
+#include <stan/math/prim/arr/err/check_matching_sizes.hpp>
 #include <stan/math/fwd/mat/fun/typedefs.hpp>
 #include <stan/math/fwd/mat/fun/to_fvar.hpp>
 #include <vector>
@@ -12,8 +12,6 @@
 namespace stan {
   namespace math {
 
-    // dot_product for vec (in matrix) * vec (in matrix);
-    // does all combos of row row, col col, row col, col row
     template<typename T, int R1, int C1, int R2, int C2>
     inline
     fvar<T>

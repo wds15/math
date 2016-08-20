@@ -2,11 +2,10 @@
 #define STAN_MATH_PRIM_MAT_FUN_MULTIPLY_HPP
 
 #include <stan/math/prim/mat/fun/Eigen.hpp>
-#include <stan/math/prim/mat/err/check_matching_sizes.hpp>
+#include <stan/math/prim/arr/err/check_matching_sizes.hpp>
 #include <stan/math/prim/mat/err/check_multiplicable.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <stdexcept>
 
 namespace stan {
   namespace math {
@@ -27,9 +26,6 @@ namespace stan {
              T c) {
       return c * m;
     }
-
-    // FIXME:  apply above pattern everywhere below to remove
-    //         extra defs, etc.
 
     /**
      * Return specified scalar multiplied by specified matrix.
@@ -83,8 +79,6 @@ namespace stan {
       check_matching_sizes("multiply",
                            "rv", rv,
                            "v", v);
-      if (rv.size() != v.size())
-        throw std::domain_error("rv.size() != v.size()");
       return rv.dot(v);
     }
 
