@@ -99,6 +99,15 @@ ifeq (,$(TBB_CC))
   $(error "Need to set TBB_CC to C compiler command for non-standard compiler.")
 endif
 
+# on Windows the TBB must use mingw32-make instead of make
+ifeq ($(OS),Windows_NT)
+  ifneq (,$(findstring mingw,$(MAKE)))
+     TBB_MAKE ?= $(subst make,mingw32-make,$(MAKE))
+  endif
+else
+  TBB_MAKE ?= $(MAKE)
+endif
+
 #workaround for non-depend targets tbb and tbbmalloc which both depend on version_string.ver
 #According to documentation, recursively invoked make commands can process their targets in parallel
 #.NOTPARALLEL: $(TBB)/lib/tbb.def $(TBB)/lib/tbbmalloc.def $(TBB)/lib/tbbmallocproxy.def
@@ -106,11 +115,11 @@ endif
 
 $(TBB)/lib/tbb.def: $(TBB)/lib/tbbmalloc.def
 	@mkdir -p $(TBB)/lib
-	tbb_root="$(TBB_ABSOLUTE_PATH)" CXX="$(CXX)" CC="$(TBB_CC)" LDFLAGS="$(LDFLAGS_TBB)" $(MAKE) -C $(TBB)/lib -r -f "$(TBB_ABSOLUTE_PATH)/build/Makefile.tbb" compiler=$(TBB_CXX_TYPE) cfg=release
+	tbb_root="$(TBB_ABSOLUTE_PATH)" CXX="$(CXX)" CC="$(TBB_CC)" LDFLAGS="$(LDFLAGS_TBB)" $(TBB_MAKE) -C $(TBB)/lib -r -f "$(TBB_ABSOLUTE_PATH)/build/Makefile.tbb" compiler=$(TBB_CXX_TYPE) cfg=release
 
 $(TBB)/lib/tbbmalloc.def:
 	@mkdir -p $(TBB)/lib
-	tbb_root="$(TBB_ABSOLUTE_PATH)" CXX="$(CXX)" CC="$(TBB_CC)" LDFLAGS="$(LDFLAGS_TBB)" $(MAKE) -C $(TBB)/lib -r -f "$(TBB_ABSOLUTE_PATH)/build/Makefile.tbbmalloc" compiler=$(TBB_CXX_TYPE) cfg=release malloc
+	tbb_root="$(TBB_ABSOLUTE_PATH)" CXX="$(CXX)" CC="$(TBB_CC)" LDFLAGS="$(LDFLAGS_TBB)" $(TBB_MAKE) -C $(TBB)/lib -r -f "$(TBB_ABSOLUTE_PATH)/build/Makefile.tbbmalloc" compiler=$(TBB_CXX_TYPE) cfg=release malloc
 
 $(TBB)/lib/libtbb.dylib: $(TBB)/lib/tbb.def
 $(TBB)/lib/libtbbmalloc.dylib: $(TBB)/lib/tbbmalloc.def
