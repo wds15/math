@@ -101,12 +101,11 @@ endif
 
 # on Windows the TBB must use mingw32-make instead of make
 ifeq ($(OS),Windows_NT)
-  ifneq (,$(findstring mingw,$(MAKE)))
+  ifeq (,$(findstring mingw,$(MAKE)))
      TBB_MAKE ?= $(subst make,mingw32-make,$(MAKE))
   endif
-else
-  TBB_MAKE ?= $(MAKE)
 endif
+TBB_MAKE ?= $(MAKE)
 
 #workaround for non-depend targets tbb and tbbmalloc which both depend on version_string.ver
 #According to documentation, recursively invoked make commands can process their targets in parallel
