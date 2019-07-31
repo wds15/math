@@ -102,7 +102,10 @@ endif
 # on Windows the TBB must use mingw32-make instead of make
 ifeq ($(OS),Windows_NT)
   ifeq (,$(findstring mingw,$(MAKE)))
-     TBB_MAKE ?= $(subst make,mingw32-make,$(MAKE))
+     TBB_MAKE ?= $(shell which mingw32-make)
+     ifeq (,$(TBB_MAKE))
+        $(error "Cannot locate mingw32-make needed to build the TBB. Please set TBB_MAKE to point to mingw32-make.")
+     endif
   endif
 endif
 TBB_MAKE ?= $(MAKE)
